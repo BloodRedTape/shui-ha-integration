@@ -1,4 +1,4 @@
-from typing import Callable, Any
+from typing import Callable, Any, Awaitable
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import PERCENTAGE
 from homeassistant.const import UnitOfTemperature
@@ -26,13 +26,10 @@ def setup_platform(
 
     printer = Shui3dPrinter(PRINTER_IP, PRINTER_PORT, log)
 
-    def updater():
-        hass.add_job(printer.ensure_update())
-
     add_entities(
         [
             PrinterSensor(
-                updater,
+                printer.ensure_update,
                 printer.bed_temp,
                 "Bed Temp",
                 "bed temp id",
@@ -40,7 +37,7 @@ def setup_platform(
                 "mdi:printer-3d",
             ),
             PrinterSensor(
-                updater,
+                printer.ensure_update,
                 printer.target_bed_temp,
                 "Target Bed Temp",
                 "target bed temp id",
@@ -48,7 +45,7 @@ def setup_platform(
                 "mdi:printer-3d",
             ),
             PrinterSensor(
-                updater,
+                printer.ensure_update,
                 printer.extruder_temp,
                 "Extruder Temp",
                 "extruder temp id",
@@ -56,7 +53,7 @@ def setup_platform(
                 "mdi:printer-3d-nozzle",
             ),
             PrinterSensor(
-                updater,
+                printer.ensure_update,
                 printer.target_extruder_temp,
                 "Target Extruder Temp",
                 "target extruder temp id",
@@ -64,7 +61,7 @@ def setup_platform(
                 "mdi:printer-3d-nozzle",
             ),
             PrinterSensor(
-                updater,
+                printer.ensure_update,
                 printer.status,
                 "Connection",
                 "connection id",
@@ -72,7 +69,7 @@ def setup_platform(
                 "mdi:access-point-network",
             ),
             PrinterSensor(
-                updater,
+                printer.ensure_update,
                 printer.print_status,
                 "Print Status",
                 "print status id",
@@ -80,7 +77,7 @@ def setup_platform(
                 "mdi:state-machine",
             ),
             PrinterSensor(
-                updater,
+                printer.ensure_update,
                 printer.print_progress,
                 "Print Progress",
                 "print progress id",
@@ -93,13 +90,13 @@ def setup_platform(
 
 class PrinterSensor(SensorEntity):
     _getter: Callable[[], Any]
-    _updater: Callable[[], None]
+    _updater: Callable[[], Awaitable[Any]]
     _unit: str
     _icon: str
 
     def __init__(
         self,
-        updater: Callable[[], None],
+        updater: Callable[[], Awaitable[Any]],
         getter: Callable[[], Any],
         name: str,
         id: str,
@@ -113,8 +110,8 @@ class PrinterSensor(SensorEntity):
         self._unit = unit
         self._icon = icon
 
-    def update(self):
-        self._updater()
+    async def async_update(self):
+        await self._updater()
 
     @property
     def icon(self):
