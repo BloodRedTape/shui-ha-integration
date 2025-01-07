@@ -14,7 +14,7 @@ class Shui3dPrinterConnectionStatus(Enum):
 
 
 class Shui3dPrintStatus(Enum):
-    Not = 0
+    Idle = 0
     Busy = 1
     Printing = 2
 
