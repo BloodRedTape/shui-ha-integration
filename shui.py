@@ -180,7 +180,7 @@ class Shui3dPrinter:
                 self._print_status = Shui3dPrintStatus.Busy
                 break
             else:
-                self._print_status = Shui3dPrintStatus.Not
+                self._print_status = Shui3dPrintStatus.Idle
 
     def log(self, message: str):
         self._logger(message)
