@@ -27,6 +27,7 @@ class Shui3dPrinter:
     CONNECTION_TIMEOUT = 2
     READ_TIMEOUT = 4
     DELAY_AFTER_CMD_WRITE = 4
+    FAILS_TO_DISCONNECT = 3
 
     _ip: str
     _port: int
@@ -47,6 +48,8 @@ class Shui3dPrinter:
     _update: bool = False
 
     _logger: Callable[[str], None]
+
+    _disconnected: int = 0
 
     def __init__(self, ip: str, port: int, logger: Callable[[str], None] = StdLogger):
         self._ip = ip
@@ -132,11 +135,14 @@ class Shui3dPrinter:
         except Exception as e:
             self.log(f"Progress update failed with: {type(e).__name__}")
 
-        self._status = (
-            Shui3dPrinterConnectionStatus.Connected
-            if len(lines)
-            else Shui3dPrinterConnectionStatus.Disconnected
-        )
+        if len(lines):
+            self._disconnected = 0
+            self._status = Shui3dPrinterConnectionStatus.Connected
+        else:
+            self._disconnected += 1
+        
+        if self._disconnected >= Shui3dPrinter.FAILS_TO_DISCONNECT:
+            self._status = Shui3dPrinterConnectionStatus.Disconnected
 
     async def ensure_update(self):
         if self._update:
