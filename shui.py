@@ -167,7 +167,7 @@ class Shui3dPrinter:
         for line in lines:
             if "SD printing byte" in line:
                 nm = line.split()[-1].split("/")
-                self._print_progress = int(float(nm[0]) / float(nm[1]) * 100)
+                self._print_progress = float(nm[0]) / float(nm[1]) * 100
                 self._print_status = Shui3dPrintStatus.Printing
                 break
             elif "busy" in line:
