@@ -2,7 +2,7 @@ from homeassistant.components.button import ButtonEntity
 from typing import Callable, Awaitable, Any
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.config_entries import ConfigEntry
 from .shui import Shui3dPrinter
 from .const import PRINTER_IP, PRINTER_PORT
 import logging
@@ -14,17 +14,14 @@ def log(message: str):
     _LOGGER.info(message)
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the sensor platform."""
-
     printer = Shui3dPrinter(PRINTER_IP, PRINTER_PORT, log)
 
-    add_entities(
+    async_add_entities(
         [
             PrinterButton(
                 printer.beep,

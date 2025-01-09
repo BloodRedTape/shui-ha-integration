@@ -1,32 +1,31 @@
-from typing import Callable, Any, Awaitable
+import logging
+from typing import Any, Callable, Awaitable
+
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import PERCENTAGE
-from homeassistant.const import UnitOfTemperature
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
 from .shui import Shui3dPrinter
-from .const import PRINTER_PORT, PRINTER_IP
-import logging
 
-_LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
-def log(message: str):
-    _LOGGER.info(message)
-
-
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the sensor platform."""
+    printer: Shui3dPrinter = config_entry.runtime_data
 
-    printer = Shui3dPrinter(PRINTER_IP, PRINTER_PORT, log)
+    if printer is None or not isinstance(printer, Shui3dPrinter):
+        LOGGER.error(
+            "config_entry.runtime_data does not containt Shui3dPrinter instance"
+        )
+        return
 
-    add_entities(
+    async_add_entities(
         [
             PrinterSensor(
                 printer.ensure_update,

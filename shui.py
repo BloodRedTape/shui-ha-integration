@@ -140,7 +140,7 @@ class Shui3dPrinter:
             self._status = Shui3dPrinterConnectionStatus.Connected
         else:
             self._disconnected += 1
-        
+
         if self._disconnected >= Shui3dPrinter.FAILS_TO_DISCONNECT:
             self._status = Shui3dPrinterConnectionStatus.Disconnected
 

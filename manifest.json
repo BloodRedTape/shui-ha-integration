@@ -1,5 +1,6 @@
 {
   "domain": "shui_3d_print",
   "name": "Shui 3d Print",
-  "version": "0.1.0"
+  "version": "0.1.0",
+  "config_flow": true
 }
