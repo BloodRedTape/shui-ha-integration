@@ -1,7 +1,7 @@
 import logging
 from typing import Any, Callable, Awaitable
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorDeviceClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
@@ -34,6 +34,7 @@ async def async_setup_entry(
                 "bed temp id",
                 UnitOfTemperature.CELSIUS,
                 "mdi:printer-3d",
+                SensorDeviceClass.TEMPERATURE,
             ),
             PrinterSensor(
                 printer.ensure_update,
@@ -42,6 +43,7 @@ async def async_setup_entry(
                 "target bed temp id",
                 UnitOfTemperature.CELSIUS,
                 "mdi:printer-3d",
+                SensorDeviceClass.TEMPERATURE,
             ),
             PrinterSensor(
                 printer.ensure_update,
@@ -50,6 +52,7 @@ async def async_setup_entry(
                 "extruder temp id",
                 UnitOfTemperature.CELSIUS,
                 "mdi:printer-3d-nozzle",
+                SensorDeviceClass.TEMPERATURE,
             ),
             PrinterSensor(
                 printer.ensure_update,
@@ -58,6 +61,7 @@ async def async_setup_entry(
                 "target extruder temp id",
                 UnitOfTemperature.CELSIUS,
                 "mdi:printer-3d-nozzle",
+                SensorDeviceClass.TEMPERATURE,
             ),
             PrinterSensor(
                 printer.ensure_update,
@@ -66,6 +70,7 @@ async def async_setup_entry(
                 "connection id",
                 "",
                 "mdi:access-point-network",
+                None,
             ),
             PrinterSensor(
                 printer.ensure_update,
@@ -74,6 +79,7 @@ async def async_setup_entry(
                 "print status id",
                 "",
                 "mdi:state-machine",
+                None,
             ),
             PrinterSensor(
                 printer.ensure_update,
@@ -82,6 +88,7 @@ async def async_setup_entry(
                 "print progress id",
                 PERCENTAGE,
                 "mdi:percent-outline",
+                None,
             ),
         ]
     )
@@ -92,6 +99,7 @@ class PrinterSensor(SensorEntity):
     _updater: Callable[[], Awaitable[Any]]
     _unit: str
     _icon: str
+    _device_class: SensorDeviceClass | None
 
     def __init__(
         self,
@@ -101,6 +109,7 @@ class PrinterSensor(SensorEntity):
         id: str,
         unit: str,
         icon: str,
+        deivce_class: SensorDeviceClass | None,
     ):
         self._attr_unique_id = id
         self._attr_name = name
@@ -108,6 +117,7 @@ class PrinterSensor(SensorEntity):
         self._updater = updater
         self._unit = unit
         self._icon = icon
+        self._device_class = deivce_class
 
     async def async_update(self):
         await self._updater()
@@ -125,3 +135,7 @@ class PrinterSensor(SensorEntity):
     @property
     def state(self):
         return self._getter()
+
+    @property
+    def device_class(self) -> SensorDeviceClass | None:
+        return self._device_class
