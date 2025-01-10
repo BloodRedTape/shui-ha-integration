@@ -188,6 +188,9 @@ class Shui3dPrinter:
     def status(self):
         return str(self._status).split(".")[1]
 
+    def is_connected(self) -> bool:
+        return self._status == Shui3dPrinterConnectionStatus.Connected
+
     def bed_temp(self):
         return (
             self._bed_temp
