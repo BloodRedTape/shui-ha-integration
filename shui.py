@@ -110,6 +110,9 @@ class Shui3dPrinter:
 
     _print_progress: float = 0
     _print_status: Shui3dPrintStatus = Shui3dPrintStatus.Idle
+    _print_status_diff: int = 0
+
+    DIFF_TO_CHANGE = 3
 
     _status: Shui3dPrinterConnectionStatus = Shui3dPrinterConnectionStatus.Disconnected
 
@@ -144,6 +147,8 @@ class Shui3dPrinter:
 
         if self._disconnected >= Shui3dPrinter.FAILS_TO_DISCONNECT:
             self._status = Shui3dPrinterConnectionStatus.Disconnected
+            self._print_status_diff = 0
+            self._print_status = Shui3dPrintStatus.Idle
 
     async def ensure_update(self):
         if self._update:
@@ -209,12 +214,37 @@ class Shui3dPrinter:
                 nm = line.split()[-1].split("/")
                 self._print_progress = float(nm[0]) / float(nm[1]) * 100
                 self._print_status = Shui3dPrintStatus.Printing
-                break
-            elif "busy" in line:
-                self._print_status = Shui3dPrintStatus.Busy
-                break
-            else:
-                self._print_status = Shui3dPrintStatus.Idle
+                self._print_status_diff = 0
+                return
+
+        for line in lines:
+            if "busy" in line:
+                if self._print_status == Shui3dPrintStatus.Busy:
+                    self._print_status_diff = 0
+                    return
+
+                if self._print_status == Shui3dPrintStatus.Idle:
+                    self._print_status = Shui3dPrintStatus.Busy
+                    self._print_status_diff = 0
+                    return
+
+                if self._print_status_diff >= Shui3dPrinter.DIFF_TO_CHANGE:
+                    self._print_status = Shui3dPrintStatus.Busy
+                    self._print_status_diff = 0
+                else:
+                    self._print_status_diff += 1
+
+                return
+
+        if self._print_status == Shui3dPrintStatus.Idle:
+            self._print_status_diff = 0
+            return
+
+        if self._print_status_diff >= Shui3dPrinter.DIFF_TO_CHANGE:
+            self._print_status = Shui3dPrintStatus.Idle
+            self._print_status_diff = 0
+        else:
+            self._print_status_diff += 1
 
     def status(self):
         return str(self._status).split(".")[1]
