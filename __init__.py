@@ -6,11 +6,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN, PRINTER_IP, PRINTER_PORT
+from .const import DOMAIN, PRINTER_PORT
 from .shui import Shui3dPrinter
 
 LOGGER = logging.getLogger(__name__)
-PLATFORMS = [Platform.SENSOR, Platform.BUTTON]
+PLATFORMS = [Platform.SENSOR, Platform.BUTTON, Platform.NUMBER]
 
 
 def log(message: str):
@@ -18,7 +18,7 @@ def log(message: str):
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    entry.runtime_data = Shui3dPrinter(PRINTER_IP, PRINTER_PORT, log)
+    entry.runtime_data = Shui3dPrinter(entry.data["ip"], PRINTER_PORT, log)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

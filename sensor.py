@@ -10,7 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-
+from .const import DOMAIN
 from .shui import Shui3dPrinter, Shui3dPrinterConnectionStatus, Shui3dPrintStatus
 
 LOGGER = logging.getLogger(__name__)
@@ -42,27 +42,9 @@ async def async_setup_entry(
             ),
             PrinterSensor(
                 printer.ensure_update,
-                printer.target_bed_temp,
-                "Target Bed Temp",
-                "target bed temp id",
-                UnitOfTemperature.CELSIUS,
-                "mdi:printer-3d",
-                SensorDeviceClass.TEMPERATURE,
-            ),
-            PrinterSensor(
-                printer.ensure_update,
                 printer.extruder_temp,
                 "Extruder Temp",
                 "extruder temp id",
-                UnitOfTemperature.CELSIUS,
-                "mdi:printer-3d-nozzle",
-                SensorDeviceClass.TEMPERATURE,
-            ),
-            PrinterSensor(
-                printer.ensure_update,
-                printer.target_extruder_temp,
-                "Target Extruder Temp",
-                "target extruder temp id",
                 UnitOfTemperature.CELSIUS,
                 "mdi:printer-3d-nozzle",
                 SensorDeviceClass.TEMPERATURE,
@@ -142,6 +124,10 @@ class PrinterSensor(SensorEntity):
     def device_class(self) -> SensorDeviceClass | None:
         return self._device_class
 
+    @property
+    def device_info(self):
+        return {"identifiers": {(DOMAIN, "shui_3d_printer")}}
+
 
 class PrinterBinarySensor(BinarySensorEntity):
     _getter: Callable[[], bool]
@@ -179,6 +165,10 @@ class PrinterBinarySensor(BinarySensorEntity):
     @property
     def device_class(self) -> BinarySensorDeviceClass | None:
         return self._device_class
+
+    @property
+    def device_info(self):
+        return {"identifiers": {(DOMAIN, "shui_3d_printer")}}
 
 
 class PrinterEnum(SensorEntity):
@@ -221,3 +211,7 @@ class PrinterEnum(SensorEntity):
     @property
     def options(self):
         return self._options
+
+    @property
+    def device_info(self):
+        return {"identifiers": {(DOMAIN, "shui_3d_printer")}}

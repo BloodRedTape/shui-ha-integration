@@ -109,7 +109,7 @@ class Shui3dPrinter:
     _target_extruder_temp: float = 0
 
     _print_progress: float = 0
-    _print_status: Shui3dPrintStatus
+    _print_status: Shui3dPrintStatus = Shui3dPrintStatus.Idle
 
     _status: Shui3dPrinterConnectionStatus = Shui3dPrinterConnectionStatus.Disconnected
 
@@ -130,16 +130,14 @@ class Shui3dPrinter:
         self._logger(message)
 
     async def beep(self):
-        await Shui3dPrinterConnection(self._ip, self._port).exec(GCode.BEEP_SOUND)
+        await self.exec_with_state_update(GCode.BEEP_SOUND)
 
     async def update(self):
-        lines = await self._update_connection.exec(GCode.SD_PRINT_STATUS)
+        success = await self._exec_with_state_update(GCode.SD_PRINT_STATUS)
 
-        if isinstance(lines, Shui3dPrinterConnection.CanNotConnect):
+        if not success:
             self._disconnected += 1
         else:
-            self.update_from(lines)
-
             self._disconnected = 0
             self._status = Shui3dPrinterConnectionStatus.Connected
 
@@ -148,7 +146,7 @@ class Shui3dPrinter:
 
     async def ensure_update(self):
         if self._update:
-            return
+            return await self.wait_for_update()
 
         self._update = True
 
@@ -158,6 +156,23 @@ class Shui3dPrinter:
             pass
 
         self._update = False
+
+    async def wait_for_update(self):
+        while self._update:
+            await asyncio.sleep(0.016)
+
+    async def _exec_with_state_update(self, gcode: str) -> bool:
+        lines = await Shui3dPrinterConnection(self._ip, self._port).exec(gcode)
+
+        if isinstance(lines, Shui3dPrinterConnection.CanNotConnect):
+            return False
+
+        self.update_values_from(lines)
+
+        return True
+
+    async def exec_with_state_update(self, gcode: str) -> bool:
+        return await self._exec_with_state_update(gcode)
 
     def update_from(self, lines: List[str]):
         self.update_values_from(lines)
@@ -219,6 +234,12 @@ class Shui3dPrinter:
             if self._status == Shui3dPrinterConnectionStatus.Connected
             else None
         )
+
+    async def set_target_bed_temp(self, temp: float):
+        await self.exec_with_state_update(f"M140 S{temp}")
+
+    async def set_target_extruder_temp(self, temp: float):
+        await self.exec_with_state_update(f"M104 T0 S{temp}")
 
     def extruder_temp(self):
         return (

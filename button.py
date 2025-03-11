@@ -4,7 +4,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.config_entries import ConfigEntry
 from .shui import Shui3dPrinter
-from .const import PRINTER_IP, PRINTER_PORT
+from .const import DOMAIN
 import logging
 
 _LOGGER = logging.getLogger(__name__)
@@ -19,8 +19,13 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    printer = Shui3dPrinter(PRINTER_IP, PRINTER_PORT, log)
+    printer: Shui3dPrinter = config_entry.runtime_data
 
+    if printer is None or not isinstance(printer, Shui3dPrinter):
+        _LOGGER.error(
+            "config_entry.runtime_data does not containt Shui3dPrinter instance"
+        )
+        return
     async_add_entities(
         [
             PrinterButton(
@@ -51,3 +56,13 @@ class PrinterButton(ButtonEntity):
 
     async def async_press(self) -> None:
         await self._press()
+
+    @property
+    def device_info(self):
+        return {
+            "identifiers": {(DOMAIN, "shui_3d_printer")},
+            "name": "Two Trees Bluer",
+            "sw_version": "shui",
+            "model": "Bluer",
+            "manufacturer": "Two Trees",
+        }
