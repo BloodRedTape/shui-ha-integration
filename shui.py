@@ -133,11 +133,12 @@ class Shui3dPrinter:
         await self.exec_with_state_update(GCode.BEEP_SOUND)
 
     async def update(self):
-        success = await self._exec_with_state_update(GCode.SD_PRINT_STATUS)
+        lines = await self._update_connection.exec(GCode.SD_PRINT_STATUS)
 
-        if not success:
+        if isinstance(lines, Shui3dPrinterConnection.CanNotConnect):
             self._disconnected += 1
         else:
+            self.update_from(lines)
             self._disconnected = 0
             self._status = Shui3dPrinterConnectionStatus.Connected
 
